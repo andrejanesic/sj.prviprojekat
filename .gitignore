@@ -1,0 +1,9 @@
+# Environment
+.env
+
+# Node
+package-lock.json
+node_modules
+
+# IDEs
+.idea
