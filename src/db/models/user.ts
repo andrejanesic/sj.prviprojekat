@@ -18,7 +18,7 @@ interface UserAttributes {
 /**
  * User class. Needs to be instantiated via dynamic constructor.
  */
-class User extends Model<UserAttributes> implements UserAttributes{
+class User extends Model<UserAttributes> implements UserAttributes {
 
     bio!: string | null;
     email!: string;

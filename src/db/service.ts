@@ -4,7 +4,7 @@
 import {Sequelize} from 'sequelize';
 import {env} from '../helpers';
 import log from '../logger/service';
-import models from './model';
+import models from './models';
 
 /**
  * Database connection. Static variable.
