@@ -1,5 +1,6 @@
 # Environment
 .env
+src/db/config/config.js
 
 # Node
 package-lock.json
