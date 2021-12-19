@@ -11,9 +11,9 @@ dotenv.config();
  * @param defaultValue Default value. Optional.
  */
 
-export function env(key: string, defaultValue?: any) {
-    if ('ENVIRONMENT' in process.env) {
-        let envKey = key + '_' + process.env.ENVIRONMENT;
+export function env(key: string, defaultValue: any = null) {
+    if ('ENVIRONMENT' in process.env && process.env.ENVIRONMENT != null) {
+        let envKey = key + '_' + process.env.ENVIRONMENT.toUpperCase();
         if (envKey in process.env)
             return process.env[envKey];
     }
@@ -21,5 +21,5 @@ export function env(key: string, defaultValue?: any) {
     if (key in process.env)
         return process.env[key];
 
-    return defaultValue;
+    return defaultValue != null ? defaultValue : null;
 }

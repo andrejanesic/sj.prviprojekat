@@ -19,14 +19,14 @@ export async function connect(): Promise<Sequelize | null> {
     if (connection != null) return connection; // #TODO have to check if it's not closed
 
     // check that all necessary keys are defined
-    for (const i of ['DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE', 'DB_HOST', 'DB_DIALECT']) {
-        if (!env(i)) return null;
+    for (const i of ['DB_USERNAME', 'DB_DATABASE', 'DB_HOST', 'DB_DIALECT']) {
+        if (!env(i)) throw new Error(i + ' is not defined!');
     }
 
     // start sequelize
     const sequelize: Sequelize = new Sequelize({
         username: env('DB_USERNAME'),
-        password: env('DB_PASSWORD'),
+        password: env('DB_PASSWORD', ''),
         database: env('DB_DATABASE'),
         host: env('DB_HOST'),
         dialect: env('DB_DIALECT'),

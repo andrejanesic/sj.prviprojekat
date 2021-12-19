@@ -24,7 +24,7 @@ module.exports = {
                 },
             },
 
-            label: {
+            type: {
                 type: DataTypes.ENUM(['FREE']),
                 allowNull: false,
             },

@@ -1,8 +1,6 @@
 import {DataTypes, Model, Sequelize} from 'sequelize';
 
-export enum LicenseLabel {
-    FREE,
-}
+export type LicenseType = 'FREE';
 
 /**
  * License attributes.
@@ -11,7 +9,7 @@ interface LicenseAttributes {
     licenseId: number,
     licenseUuid: string,
     reference: string | null,
-    label: LicenseLabel,
+    type: LicenseType,
     domain: string | null,
 }
 
@@ -24,11 +22,11 @@ class License extends Model<LicenseAttributes> implements LicenseAttributes{
     licenseId!: number;
     licenseUuid!: string;
     reference!: string | null;
-    label!: LicenseLabel;
+    type!: LicenseType;
 
-    static associate({}) {
+    /*static associate({}) {
 
-    }
+    }*/
 }
 
 /**
@@ -58,10 +56,10 @@ export default (sequelize: Sequelize): typeof License => {
             },
         },
 
-        label: {
+        type: {
             // #TODO replace this with dynamic method call
             type: DataTypes.ENUM(
-                LicenseLabel.FREE.toString()
+                'FREE'
             ),
             allowNull: false,
         },

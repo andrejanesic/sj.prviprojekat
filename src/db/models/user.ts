@@ -32,9 +32,9 @@ class User extends Model<UserAttributes> implements UserAttributes {
     userId!: number;
     userUuid!: string;
 
-    static associate({}) {
+    /*static associate({}) {
 
-    }
+    }*/
 }
 
 /**
@@ -104,7 +104,7 @@ export default (sequelize: Sequelize): typeof User => {
             type: DataTypes.STRING(30),
             allowNull: true,
             validate: {
-                is: /^[\p{L}'\- ]+$/iu
+                is: /^$|^[\p{L}'\- ]+$/iu
             },
         },
 
@@ -112,7 +112,7 @@ export default (sequelize: Sequelize): typeof User => {
             type: DataTypes.STRING(30),
             allowNull: true,
             validate: {
-                is: /^[\p{L}'\- ]+$/iu
+                is: /^$|^[\p{L}'\- ]+$/iu
             },
         },
 
