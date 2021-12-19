@@ -3,7 +3,7 @@
  */
 import express, {Request, Response} from 'express';
 import * as dotenv from 'dotenv';
-import {connect} from '../../db/service';
+import {connect} from '../db/service';
 
 dotenv.config();
 

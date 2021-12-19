@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { router as apiRouter } from './api/controller/router';
+import { router as apiRouter } from './api/router';
 dotenv.config();
 
 /**
