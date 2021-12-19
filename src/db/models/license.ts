@@ -6,11 +6,27 @@ export type LicenseType = 'FREE';
  * License attributes.
  */
 interface LicenseAttributes {
+    // internal license ID
     licenseId: number,
+
+    // license UUID
     licenseUuid: string,
+
+    // license reference (billing ref ID)
     reference: string | null,
+
+    // license type
     type: LicenseType,
+
+    // domain to accept new users from
+    // #TODO implement domain checking for user seat invites!
     domain: string | null,
+
+    // team name
+    teamName: string,
+
+    // for support to turn off teams easily
+    active: boolean,
 }
 
 /**
@@ -23,6 +39,8 @@ class License extends Model<LicenseAttributes> implements LicenseAttributes{
     licenseUuid!: string;
     reference!: string | null;
     type!: LicenseType;
+    teamName!: string;
+    active!: boolean;
 
     /*static associate({}) {
 
@@ -62,6 +80,17 @@ export default (sequelize: Sequelize): typeof License => {
                 'FREE'
             ),
             allowNull: false,
+        },
+
+        teamName: {
+            type: DataTypes.STRING(25),
+            allowNull: false,
+        },
+
+        active: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
         },
 
         /* Nullable */

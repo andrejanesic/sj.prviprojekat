@@ -66,9 +66,11 @@ licensesRouter.post('/', async (req: Request, res: Response) => {
         error(res);
     } else {
         let params: object = {
-            type: req.body.type != null ? req.body.type : '',
+            type: req.body.type != null ? req.body.type : 'FREE', // #TODO the 'FREE' part could cause trouble!
             reference: req.body.type != null ? req.body.type : '',
             domain: req.body.domain != null ? req.body.domain : '',
+            teamName: req.body.teamName != null ? req.body.teamName : '',
+            active: req.body.active != null ? req.body.active === 'true' : true,
         };
         // @ts-ignore
         License(sequelize).create(params)
@@ -94,6 +96,8 @@ licensesRouter.put('/:uuid', async (req: Request, res: Response) => {
         if (req.body.type != null) params.type = req.body.type;
         if (req.body.reference != null) params.reference = req.body.reference;
         if (req.body.domain != null) params.domain = req.body.domain;
+        if (req.body.teamName != null) params.teamName = req.body.teamName;
+        if (req.body.active != null) params.active = req.body.active === 'true';
 
         License(sequelize).update(params, {where: {licenseUuid: req.params.uuid}})
             .then(rows => res.json(rows))

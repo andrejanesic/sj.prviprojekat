@@ -1,5 +1,6 @@
 'use strict';
 
+const {DataTypes} = require('sequelize');
 module.exports = {
     up: async (queryInterface, DataTypes) => {
         await queryInterface.createTable('Licenses', {
@@ -27,6 +28,17 @@ module.exports = {
             type: {
                 type: DataTypes.ENUM(['FREE']),
                 allowNull: false,
+            },
+
+            teamName: {
+                type: DataTypes.STRING(25),
+                allowNull: false,
+            },
+
+            active: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: true,
             },
 
             /* Nullable */
