@@ -1,4 +1,4 @@
-import {Model} from 'sequelize';
+import {DataTypes, Model, Sequelize} from 'sequelize';
 
 export enum LicenseLabel {
     FREE,
@@ -34,7 +34,7 @@ class License extends Model<LicenseAttributes> implements LicenseAttributes{
 /**
  * License class dynamic constructor.
  */
-export default (sequelize: any, DataTypes: any): typeof License => {
+export default (sequelize: Sequelize): typeof License => {
 
     License.init({
 
@@ -59,7 +59,10 @@ export default (sequelize: any, DataTypes: any): typeof License => {
         },
 
         label: {
-            type: DataTypes.ENUM(Object.values(LicenseLabel)),
+            // #TODO replace this with dynamic method call
+            type: DataTypes.ENUM(
+                LicenseLabel.FREE.toString()
+            ),
             allowNull: false,
         },
 

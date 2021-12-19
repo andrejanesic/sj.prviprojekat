@@ -1,4 +1,4 @@
-import {Model} from 'sequelize';
+import {DataTypes, Model, Sequelize} from 'sequelize';
 import License from './license';
 
 interface UserAttributes {
@@ -40,7 +40,7 @@ class User extends Model<UserAttributes> implements UserAttributes{
 /**
  * User class dynamic constructor.
  */
-export default (sequelize: any, DataTypes: any): typeof User => {
+export default (sequelize: Sequelize): typeof User => {
 
     User.init({
 
@@ -68,7 +68,7 @@ export default (sequelize: any, DataTypes: any): typeof User => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: License(sequelize, DataTypes),
+                model: License(sequelize),
                 key: 'licenseId'
             },
         },

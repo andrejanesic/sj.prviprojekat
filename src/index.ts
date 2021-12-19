@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { router } from './api/controller/router';
+import { router as apiRouter } from './api/controller/router';
 dotenv.config();
 
 /**
@@ -25,7 +25,7 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.use('/api', router);
+app.use('/api', apiRouter);
 
 /**
  * Server Activation
