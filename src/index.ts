@@ -7,6 +7,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import {usersRouter} from './api/usersRouter';
 import {licensesRouter} from './api/licensesRouter';
+import {campaignsRouter} from './api/campaignsRouter';
+import {funnelsRouter} from './api/funnelsRouter';
 
 dotenv.config();
 
@@ -29,6 +31,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/users', usersRouter);
 app.use('/api/licenses', licensesRouter);
+app.use('/api/campaigns', campaignsRouter);
+app.use('/api/funnels', funnelsRouter);
 
 /**
  * Server Activation
