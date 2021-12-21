@@ -24,12 +24,12 @@ module.exports = {
                 },
             },
 
-            licenseId: {
-                type: DataTypes.INTEGER,
+            licenseUuid: {
+                type: DataTypes.UUID,
                 allowNull: false,
                 references: {
                     model: 'Licenses',
-                    key: 'licenseId'
+                    key: 'licenseUuid'
                 },
             },
 

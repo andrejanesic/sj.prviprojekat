@@ -4,11 +4,11 @@ import Campaign from './campaign';
 interface FunnelAttributes {
     funnelId: number,
     funnelUuid: string,
-    campaignId: number,
+    campaignUuid: number,
     name: string,
     description: string | null,
     type: string | null,
-    is_template: boolean,
+    isTemplate: boolean,
 }
 
 /**
@@ -18,11 +18,11 @@ class Funnel extends Model<FunnelAttributes> implements FunnelAttributes {
 
     funnelId!: number;
     funnelUuid!: string;
-    campaignId!: number;
+    campaignUuid!: number;
     name!: string;
     description!: string | null;
     type!: string | null;
-    is_template!: boolean;
+    isTemplate!: boolean;
     content!: string | null;
 
     /*static associate({}) {
@@ -59,12 +59,12 @@ export default (sequelize: Sequelize): typeof Funnel => {
             },
         },
 
-        campaignId: {
-            type: DataTypes.INTEGER,
+        campaignUuid: {
+            type: DataTypes.UUID,
             allowNull: false,
             references: {
                 model: Campaign(sequelize),
-                key: 'campaignId'
+                key: 'campaignUuid'
             },
         },
 
@@ -74,7 +74,7 @@ export default (sequelize: Sequelize): typeof Funnel => {
             allowNull: false,
         },
 
-        is_template: {
+        isTemplate: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
         },

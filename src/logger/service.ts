@@ -3,5 +3,9 @@
  * @param message Message to log.
  */
 export default function log(message: any) {
-    console.log(message.toString());
+    if (message instanceof Error) {
+        console.log(message.name + ': ' + message.message + '\n' + message.stack);
+    } else {
+        console.log(message.toString());
+    }
 }

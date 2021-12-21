@@ -24,12 +24,12 @@ module.exports = {
                 },
             },
 
-            campaignId: {
-                type: DataTypes.INTEGER,
+            campaignUuid: {
+                type: DataTypes.UUID,
                 allowNull: false,
                 references: {
                     model: 'Campaigns',
-                    key: 'campaignId'
+                    key: 'campaignUuid'
                 },
             },
 
@@ -39,7 +39,7 @@ module.exports = {
                 allowNull: false,
             },
 
-            is_template: {
+            isTemplate: {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,
             },

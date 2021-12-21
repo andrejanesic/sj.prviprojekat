@@ -4,7 +4,7 @@ import License from './license';
 interface UserAttributes {
     userId: number,
     userUuid: string,
-    licenseId: number,
+    licenseUuid: number,
     email: string,
     password: string,
     isAdminMaster: boolean,
@@ -26,7 +26,7 @@ class User extends Model<UserAttributes> implements UserAttributes {
     isAdminBilling!: boolean;
     isAdminMaster!: boolean;
     lastName!: string | null;
-    licenseId!: number;
+    licenseUuid!: number;
     password!: string;
     role!: string | null;
     userId!: number;
@@ -64,12 +64,12 @@ export default (sequelize: Sequelize): typeof User => {
             },
         },
 
-        licenseId: {
-            type: DataTypes.INTEGER,
+        licenseUuid: {
+            type: DataTypes.UUID,
             allowNull: false,
             references: {
                 model: License(sequelize),
-                key: 'licenseId'
+                key: 'licenseUuid'
             },
         },
 
