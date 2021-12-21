@@ -33,6 +33,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/licenses', licensesRouter);
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/funnels', funnelsRouter);
+app.use(express.static('public'));
 
 /**
  * Server Activation

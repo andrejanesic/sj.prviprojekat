@@ -1,3 +1,6 @@
+# Build files
+public
+
 # Environment
 .env
 src/db/config/config.js
