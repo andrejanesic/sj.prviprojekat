@@ -3,10 +3,10 @@
  */
 import express, {Request, Response} from 'express';
 import * as dotenv from 'dotenv';
-import {connect} from '../db/service';
-import User from '../db/models/user';
+import {connect} from '../../db/service';
+import User from '../../db/models/user';
 import {Sequelize} from 'sequelize';
-import License from '../db/models/license';
+import License from '../../db/models/license';
 import {failError, failValidation} from './baseRouter';
 import Joi from 'joi';
 
@@ -144,6 +144,7 @@ usersRouter.post('/', async (req: Request, res: Response) => {
     } else {
         // if new team (set licenseUuid = null) then make a new license
         if (params.licenseUuid == null) {
+            // @js-ignore
             // @ts-ignore
             License(sequelize).create({
                 // #TODO what string is before '@', is it dangerous?
@@ -155,7 +156,7 @@ usersRouter.post('/', async (req: Request, res: Response) => {
                     params.isAdminMaster = true;
                     params.isAdminBilling = true;
 
-                    // @ts-ignore
+                    // @js-ignore
                     User(sequelize).create(params)
                         .then(rows => res.json(rows))
                         .catch(err => failError(res, err));
@@ -164,7 +165,7 @@ usersRouter.post('/', async (req: Request, res: Response) => {
         } else {
             // #TODO set licenseUuid here since user is being added to existing team!
 
-            // @ts-ignore
+            // @js-ignore
             User(sequelize).create(params)
                 .then(rows => res.status(201).json(rows))
                 .catch(err => failError(res, err));

@@ -3,8 +3,8 @@
  */
 import express, {Request, Response} from 'express';
 import * as dotenv from 'dotenv';
-import {connect} from '../db/service';
-import License from '../db/models/license';
+import {connect} from '../../db/service';
+import License from '../../db/models/license';
 import {Sequelize} from 'sequelize';
 import {failError, failValidation} from './baseRouter';
 import Joi from 'joi';
@@ -113,6 +113,7 @@ licensesRouter.post('/', async (req: Request, res: Response) => {
     if (sequelize == null) {
         failError(res);
     } else {
+        // @js-ignore
         // @ts-ignore
         License(sequelize).create(params)
             .then(rows => res.status(201).json(rows))

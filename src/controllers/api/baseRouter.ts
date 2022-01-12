@@ -1,5 +1,5 @@
 import {Response} from 'express';
-import log from '../logger/service';
+import log from '../../logger/service';
 import {ValidationError} from 'sequelize';
 import Joi from 'joi';
 

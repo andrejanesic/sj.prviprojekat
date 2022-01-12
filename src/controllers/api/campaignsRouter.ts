@@ -3,10 +3,10 @@
  */
 import express, {Request, Response} from 'express';
 import * as dotenv from 'dotenv';
-import {connect} from '../db/service';
+import {connect} from '../../db/service';
 import {Sequelize} from 'sequelize';
 import {failError, failValidation} from './baseRouter';
-import Funnel from '../db/models/funnel';
+import Campaign from '../../db/models/campaign';
 import Joi from 'joi';
 
 dotenv.config();
@@ -14,14 +14,14 @@ dotenv.config();
 /**
  * Router Definition
  */
-export const funnelsRouter = express.Router();
+export const campaignsRouter = express.Router();
 
 /**
  * Controller Definitions
  */
 
 // GET all
-funnelsRouter.get('/', async (req: Request, res: Response) => {
+campaignsRouter.get('/', async (req: Request, res: Response) => {
 
     // #TODO add auth, this function is only limited to ADMINS
     // #TODO check if user has perms to do all this!
@@ -30,14 +30,14 @@ funnelsRouter.get('/', async (req: Request, res: Response) => {
     if (sequelize == null) {
         failError(res, 'Sequelize is null!');
     } else {
-        Funnel(sequelize).findAll()
+        Campaign(sequelize).findAll()
             .then(rows => res.json(rows))
             .catch(err => failError(res, err));
     }
 });
 
 // GET uuid
-funnelsRouter.get('/:uuid', async (req: Request, res: Response) => {
+campaignsRouter.get('/:uuid', async (req: Request, res: Response) => {
 
     // #TODO add auth, this function is only limited to ADMINS
     // #TODO check if user has perms to do all this!
@@ -48,7 +48,7 @@ funnelsRouter.get('/:uuid', async (req: Request, res: Response) => {
         .string()
         .guid({version: 'uuidv4'})
         .required();
-    const {error}: any = schema.validate(uuid);
+    const {error}: any = schema.validate(uuid, {abortEarly: false});
     if (error != null) {
         return failValidation(res, error);
     }
@@ -57,52 +57,48 @@ funnelsRouter.get('/:uuid', async (req: Request, res: Response) => {
     if (sequelize == null) {
         failError(res);
     } else {
-        Funnel(sequelize).findOne({where: {funnelUuid: uuid}})
+        Campaign(sequelize).findOne({where: {campaignUuid: uuid}})
             .then(rows => res.json(rows))
             .catch(err => failError(res, err));
     }
 });
 
 // POST create
-funnelsRouter.post('/', async (req: Request, res: Response) => {
+campaignsRouter.post('/', async (req: Request, res: Response) => {
 
     // #TODO add auth, this function is only limited to ADMINS
     // #TODO check if user has perms to do all this!
 
-    // #TODO add support for content and variables!
+    // #TODO add support for variables!
 
     let params: any = {
-        campaignUuid: req.body.campaignUuid,
-        name: req.body.description,
-        isTemplate: req.body.isTemplate === 'true',
+        licenseId: parseInt(req.body.licenseId, 10),
+        name: req.body.name,
         description: req.body.description,
-        type: req.body.type,
+        color: req.body.color,
+        icon: req.body.icon,
     };
 
     const schema: Joi.AnySchema = Joi
         .object({
-            campaignUuid: Joi
-                .string()
-                .guid({version: 'uuidv4'})
-                .required(),
-
             name: Joi
                 .string()
-                .max(60)
-                .optional(),
-
-            isTemplate: Joi
-                .boolean()
+                .max(40)
                 .required(),
-
-            type: Joi
-                .string()
-                .max(30)
-                .optional(),
 
             description: Joi
                 .string()
                 .max(200)
+                .optional(),
+
+            color: Joi
+                .string()
+                .max(7)
+                .optional(),
+
+            icon: Joi
+                .string()
+                .max(15)
                 .optional(),
         });
     const {error}: any = schema.validate(params, {abortEarly: false});
@@ -114,15 +110,17 @@ funnelsRouter.post('/', async (req: Request, res: Response) => {
     if (sequelize == null) {
         failError(res);
     } else {
-        // @ts-ignore
-        Funnel(sequelize).create(params)
+        // #TODO fetch licenseId from user data if not backoffice!
+
+        // @js-ignore
+        Campaign(sequelize).create(params)
             .then(rows => res.status(201).json(rows))
             .catch(err => failError(res, err));
     }
 });
 
 // PUT uuid update
-funnelsRouter.put('/:uuid', async (req: Request, res: Response) => {
+campaignsRouter.put('/:uuid', async (req: Request, res: Response) => {
 
     // #TODO add auth, this function is only limited to ADMINS
     // #TODO check if user has perms to do all this!
@@ -138,39 +136,35 @@ funnelsRouter.put('/:uuid', async (req: Request, res: Response) => {
         return failValidation(res, error);
     }
 
-    // #TODO add support for content and variables!
+    // #TODO add support for variables!
 
     let params: any = {};
-    if (req.body.campaignUuid != null) params.campaignUuid = req.body.campaignUuid;
+    if (req.body.licenseId != null) params.licenseId = parseInt(req.body.licenseId, 10);
     if (req.body.name != null) params.name = req.body.name;
-    if (req.body.isTemplate != null) params.isTemplate = req.body.isTemplate === 'true';
-    if (req.body.type != null) params.type = req.body.type;
     if (req.body.description != null) params.description = req.body.description;
+    if (req.body.color != null) params.color = req.body.color;
+    if (req.body.icon != null) params.icon = req.body.icon;
 
     const schema1 = Joi
         .object({
-            campaignUuid: Joi
-                .string()
-                .guid({version: 'uuidv4'})
-                .optional(),
-
             name: Joi
                 .string()
-                .max(60)
-                .optional(),
-
-            isTemplate: Joi
-                .boolean()
-                .optional(),
-
-            type: Joi
-                .string()
-                .max(30)
+                .max(40)
                 .optional(),
 
             description: Joi
                 .string()
                 .max(200)
+                .optional(),
+
+            color: Joi
+                .string()
+                .max(7)
+                .optional(),
+
+            icon: Joi
+                .string()
+                .max(15)
                 .optional(),
         });
     error = schema1.validate(params, {abortEarly: false}).error;
@@ -182,16 +176,16 @@ funnelsRouter.put('/:uuid', async (req: Request, res: Response) => {
     if (sequelize == null) {
         failError(res);
     } else {
-        // #TODO add support for content and variables!
+        // #TODO fetch licenseId from user data if not backoffice!
 
-        Funnel(sequelize).update(params, {where: {funnelUuid: uuid}})
+        Campaign(sequelize).update(params, {where: {campaignUuid: uuid}})
             .then(rows => res.status(204).send('Updated'))
             .catch(err => failError(res, err));
     }
 });
 
 // DELETE uuid delete
-funnelsRouter.delete('/:uuid', async (req: Request, res: Response) => {
+campaignsRouter.delete('/:uuid', async (req: Request, res: Response) => {
 
     // #TODO add auth, this function is only limited to ADMINS
     // #TODO check if user has perms to do all this!
@@ -211,7 +205,7 @@ funnelsRouter.delete('/:uuid', async (req: Request, res: Response) => {
     if (sequelize == null) {
         failError(res);
     } else {
-        Funnel(sequelize).destroy({where: {funnelUuid: uuid}})
+        Campaign(sequelize).destroy({where: {campaignUuid: uuid}})
             .then(rows => res.status(200).send('Deleted'))
             .catch(err => failError(res, err));
     }
