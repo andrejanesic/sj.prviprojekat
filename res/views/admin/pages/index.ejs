@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+    <%- include('../partials/head'); %>
+    <title>Admin | Login</title>
+</head>
+<body class="bg-slate-200">
+<div class="container mx-auto">
+    <div class="flex flex-wrap justify-center pt-20">
+        <div class="w-full md:w-1/2 bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col">
+            <a href="/admin/users"
+               class="bg-cyan-500 hover:bg-cyan-600 hover:cursor-pointer text-white font-bold py-4 px-4 rounded flex mb-3">
+                <span class="mr-2 flex items-center"><i class="im im-user-circle"></i></span> <span>Users</span>
+            </a>
+            <a href="/admin/funnels"
+               class="bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-bold py-4 px-4 rounded flex mb-3">
+                <span class="mr-2 flex items-center"><i class="im im-edit"></i></span> <span>Funnels</span>
+            </a>
+            <a href="/admin/campaigns"
+               class="bg-purple-500 hover:bg-purple-600 hover:cursor-pointer text-white font-bold py-4 px-4 rounded flex mb-3">
+                <span class="mr-2 flex items-center"><i class="im im-sitemap"></i></span> <span>Campaigns</span>
+            </a>
+            <a href="/admin/licenses"
+               class="bg-pink-500 hover:bg-pink-600 hover:cursor-pointer text-white font-bold py-4 px-4 rounded flex">
+                <span class="mr-2 flex items-center"><i class="im im-note-o"></i></i></span> <span>Licenses</span>
+            </a>
+        </div>
+    </div>
+</div>
+<%- include('../partials/script.ejs'); %>
+</body>
+</html>
