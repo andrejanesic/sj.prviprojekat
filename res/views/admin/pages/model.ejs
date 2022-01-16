@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+    <%- include('../partials/head'); %>
+    <title>Admin | Login</title>
+</head>
+<body id="model" class="bg-slate-200">
+<%- include('../partials/body'); %>
+<div class="container mx-auto">
+    <div class="flex flex-wrap justify-center pt-12 px-12">
+        <div class="w-full bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col">
+            <div class="flex">
+                <a href="/admin/users"
+                   class="bg-cyan-500 hover:bg-cyan-600 hover:cursor-pointer text-white font-bold py-4 px-4 rounded flex-col w-1/4 mx-2">
+                    <div class="flex">
+                        <span class="mr-2 flex items-center"><i class="im im-user-circle"></i></span> <span>Users</span>
+                    </div>
+                </a>
+                <a href="/admin/funnels"
+                   class="bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-bold py-4 px-4 rounded flex-col w-1/4 mx-2">
+                    <div class="flex">
+                        <span class="mr-2 flex items-center"><i class="im im-edit"></i></span> <span>Funnels</span>
+                    </div>
+                </a>
+                <a href="/admin/campaigns"
+                   class="bg-purple-500 hover:bg-purple-600 hover:cursor-pointer text-white font-bold py-4 px-4 rounded flex-col w-1/4 mx-2">
+                    <div class="flex">
+                        <span class="mr-2 flex items-center"><i class="im im-sitemap"></i></span> <span>Campaigns</span>
+                    </div>
+                </a>
+                <a href="/admin/licenses"
+                   class="bg-pink-500 hover:bg-pink-600 hover:cursor-pointer text-white font-bold py-4 px-4 rounded flex-col w-1/4 mx-2">
+                    <div class="flex">
+                        <span class="mr-2 flex items-center"><i class="im im-note-o"></i></span>
+                        <span>Licenses</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="flex flex-wrap justify-center pt-12 px-12">
+        <div class="w-full bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col">
+            <div class="flex justify-center mx-auto">
+                <div class="flex flex-col">
+                    <div class="w-full">
+                        <table>
+                            <thead class="bg-gray-50">
+                            <tr>
+                                <% for(var i = 0; i < columns.length; i++) { %>
+                                    <th class=" capitalize text-left px-6 py-2 text-xs text-gray-500">
+                                        <%= columns[i]['name'] %>
+                                    </th>
+                                <% } %>
+                                <th class="text-left px-6 py-2 text-xs text-gray-500">
+                                    Save
+                                </th>
+                                <th class="text-left px-6 py-2 text-xs text-gray-500">
+                                    Delete
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody class="bg-white">
+                            <tr class="whitespace-nowrap _template" data-uuidVal="" data-uuidKey="<%= uuidCol %>">
+                                <% for(var l = 0; l < columns.length; l++) { %>
+                                    <td class="px-6 py-4 text-sm text-gray-500">
+                                        <% if (columns[l]['type'] == 'checkbox') { %>
+                                            <div class="form-check text-center">
+                                                <input type="checkbox"
+                                                       data-property="<%= columns[l]['name'] %>"
+                                                       class="_<%= columns[l]['name'] %> form-check-input appearance-none h-4 w-4 border border-gray-300 rounded-sm bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none my-1 cursor-pointer">
+                                            </div>
+                                        <% } else { %>
+                                            <input type="<%= columns[l]['type'] %>"
+                                                   data-property="<%= columns[l]['name'] %>"
+                                                   class="_<%= columns[l]['name'] %> shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                        <% } %>
+                                    </td>
+                                <% } %>
+                                <td class="px-6 py-4">
+                                    <a href="#"
+                                       class="_save px-4 py-1 text-sm text-white bg-blue-400 rounded hover:bg-blue-600">Insert</a>
+                                </td>
+                                <td class="px-6 py-4">
+                                </td>
+                            </tr>
+                            <% for(var j = 0; j < entities.length; j++) { %>
+                                <tr class="whitespace-nowrap" data-uuidVal="<%= entities[j][uuidCol] %>"
+                                    data-uuidKey="<%= uuidCol %>">
+                                    <% for(var k = 0; k < columns.length; k++) { %>
+                                        <td class="px-6 py-4 text-sm text-gray-500">
+                                            <% if (columns[k]['type'] == 'checkbox') { %>
+                                                <div class="form-check text-center">
+                                                    <input type="checkbox"
+                                                           data-property="<%= columns[k]['name'] %>"
+                                                           class="_<%= columns[k]['name'] %> form-check-input appearance-none h-4 w-4 border border-gray-300 rounded-sm bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none transition duration-200 my-1 align-top bg-no-repeat bg-center bg-contain float-left cursor-pointer"
+                                                    <% if (entities[j][columns[k]['name']]) { %>
+                                                           checked
+                                                            <% } %>
+                                                    >
+                                                </div>
+                                            <% } else { %>
+                                                <input type="<%= columns[k]['type'] %>"
+                                                       data-property="<%= columns[k]['name'] %>"
+                                                       class="_<%= columns[k]['name'] %> shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                       value="<%= entities[j][columns[k]['name']] %>">
+                                            <% } %>
+                                        </td>
+                                    <% } %>
+                                    <td class="px-6 py-4">
+                                        <a href="#"
+                                           class="_save px-4 py-1 text-sm text-white bg-blue-400 rounded hover:bg-blue-600">Save</a>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <a href="#"
+                                           class="_delete px-4 py-1 text-sm text-white bg-red-400 rounded hover:bg-red-600">Delete</a>
+                                    </td>
+                                </tr>
+                            <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<%- include('../partials/script.ejs'); %>
+</body>
+</html>

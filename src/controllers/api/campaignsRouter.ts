@@ -4,10 +4,16 @@
 import express, {Request, Response} from 'express';
 import * as dotenv from 'dotenv';
 import {connect} from '../../db/service';
-import {Sequelize} from 'sequelize';
-import {failError, failValidation} from './baseRouter';
-import Campaign from '../../db/models/campaign';
+import {FindOptions, Sequelize} from 'sequelize';
+import {failError, failUnauthorized, failValidation} from '../../helpers/response';
+import Campaign, {CampaignAttributes} from '../../models/campaign';
 import Joi from 'joi';
+import {AuthPayload, isUserOrAdmin} from '../../middleware/authentication';
+import User, {UserAttributes} from '../../models/user';
+import License, {LicenseAttributes} from '../../models/license';
+import {filter} from '../../helpers/filters';
+import {authorized} from '../../helpers/authorized';
+import Admin, {AdminAttributes} from '../../models/admin';
 
 dotenv.config();
 
@@ -15,32 +21,55 @@ dotenv.config();
  * Router Definition
  */
 export const campaignsRouter = express.Router();
+campaignsRouter.use(isUserOrAdmin);
 
 /**
  * Controller Definitions
  */
 
+const filterParams: string[] = ['campaignId', 'licenseId', 'createdAt', 'updatedAt', 'deletedAt'];
+
 // GET all
 campaignsRouter.get('/', async (req: Request, res: Response) => {
 
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
-
     const sequelize: Sequelize | null = await connect();
-    if (sequelize == null) {
-        failError(res, 'Sequelize is null!');
-    } else {
-        Campaign(sequelize).findAll()
-            .then(rows => res.json(rows))
-            .catch(err => failError(res, err));
+    if (!sequelize) {
+        return failError(res, 'Sequelize is null!');
     }
+
+    // set query based on perms
+    let options: FindOptions<CampaignAttributes> = {};
+
+    // @ts-ignore
+    let payload: AuthPayload = authorized(req);
+    if (payload.auth.type == 'Admin') {
+        options = {};
+    } else {
+        let user: UserAttributes | null = await User(sequelize)
+            .findOne({where: {userUuid: payload.auth.uuid}});
+
+        if (!user)
+            return failUnauthorized(res);
+
+        let license: LicenseAttributes | null = await License(sequelize)
+            .findOne({where: {licenseUuid: user.licenseUuid}});
+
+        if (!license)
+            return failError(res, 'Failed to fetch license for user.licenseUuid');
+
+        options = {where: {licenseId: license?.licenseId}};
+    }
+
+    Campaign(sequelize).findAll(options)
+        .then(rows => res.json(filter(
+            rows,
+            filterParams
+        )))
+        .catch(err => failError(res, err));
 });
 
 // GET uuid
 campaignsRouter.get('/:uuid', async (req: Request, res: Response) => {
-
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
 
     const uuid: string = req.params.uuid;
 
@@ -55,32 +84,62 @@ campaignsRouter.get('/:uuid', async (req: Request, res: Response) => {
 
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res);
-    } else {
-        Campaign(sequelize).findOne({where: {campaignUuid: uuid}})
-            .then(rows => res.json(rows))
-            .catch(err => failError(res, err));
+        return failError(res);
     }
+
+    // set query based on perms
+    let options: FindOptions<CampaignAttributes> = {};
+
+    // @ts-ignore
+    let payload: AuthPayload = authorized(req);
+    if (payload.auth.type == 'Admin') {
+        options = {where: {campaignUuid: uuid}};
+    } else {
+        // @ts-ignore
+        let user: UserAttributes | null = await User(sequelize)
+            .findOne({where: {userUuid: payload.auth.uuid}});
+
+        if (!user)
+            return failUnauthorized(res);
+
+        let license: LicenseAttributes | null = await License(sequelize)
+            .findOne({where: {licenseUuid: user.licenseUuid}});
+
+        if (!license)
+            return failError(res, 'Failed to fetch license for user.licenseUuid');
+
+        options = {where: {campaignUuid: uuid, licenseId: license?.licenseId}};
+    }
+
+    Campaign(sequelize).findOne(options)
+        .then(rows => res.json(filter(
+            rows,
+            filterParams
+        )))
+        .catch(err => failError(res, err));
 });
 
 // POST create
 campaignsRouter.post('/', async (req: Request, res: Response) => {
 
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
-
     // #TODO add support for variables!
 
-    let params: any = {
-        licenseId: parseInt(req.body.licenseId, 10),
+    // @ts-ignore
+    let params: CampaignAttributes = {
+        licenseId: req.body.licenseId,
         name: req.body.name,
         description: req.body.description,
         color: req.body.color,
-        icon: req.body.icon,
+        icon: req.body.icon
     };
 
     const schema: Joi.AnySchema = Joi
         .object({
+            licenseId: Joi
+                .number()
+                .positive()
+                .required(),
+
             name: Joi
                 .string()
                 .max(40)
@@ -108,22 +167,46 @@ campaignsRouter.post('/', async (req: Request, res: Response) => {
 
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res);
-    } else {
-        // #TODO fetch licenseId from user data if not backoffice!
-
-        // @js-ignore
-        Campaign(sequelize).create(params)
-            .then(rows => res.status(201).json(rows))
-            .catch(err => failError(res, err));
+        return failError(res);
     }
+
+    // @ts-ignore
+    let payload: AuthPayload = authorized(req);
+
+    // check by permission
+    if (payload.auth.type === 'User') {
+        let user: UserAttributes | null = await User(sequelize)
+            .findOne({where: {userUuid: payload.auth.uuid}});
+
+        if (!user)
+            return failUnauthorized(res);
+
+        let license: LicenseAttributes | null = await License(sequelize)
+            .findOne({where: {licenseUuid: user.licenseUuid}});
+
+        if (!license)
+            return failError(res, 'Failed to fetch license for user.licenseUuid');
+
+        params.licenseId = license.licenseId;
+    } else {
+
+        let admin: AdminAttributes | null = await Admin(sequelize)
+            .findOne({where: {adminUuid: payload.auth.uuid}});
+
+        if (!admin)
+            return failUnauthorized(res);
+    }
+
+    Campaign(sequelize).create(params)
+        .then(rows => res.status(201).json(filter(
+            rows,
+            filterParams
+        )))
+        .catch(err => failError(res, err));
 });
 
 // PUT uuid update
 campaignsRouter.put('/:uuid', async (req: Request, res: Response) => {
-
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
 
     const uuid: string = req.params.uuid;
 
@@ -174,21 +257,37 @@ campaignsRouter.put('/:uuid', async (req: Request, res: Response) => {
 
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res);
-    } else {
-        // #TODO fetch licenseId from user data if not backoffice!
-
-        Campaign(sequelize).update(params, {where: {campaignUuid: uuid}})
-            .then(rows => res.status(204).send('Updated'))
-            .catch(err => failError(res, err));
+        return failError(res);
     }
+
+    // @ts-ignore
+    let payload: AuthPayload = authorized(req);
+    let user: UserAttributes | null = await User(sequelize)
+        .findOne({where: {userUuid: payload.auth.uuid}});
+
+    if (!user)
+        return failUnauthorized(res);
+
+    let license: LicenseAttributes | null = await License(sequelize)
+        .findOne({where: {licenseUuid: user.licenseUuid}});
+
+    if (!license)
+        return failError(res, 'Failed to fetch license for user.licenseUuid');
+
+    let campaign: CampaignAttributes | null = await Campaign(sequelize)
+        .findOne({where: {licenseId: license.licenseId, campaignUuid: uuid}});
+
+    if (!campaign)
+        return failUnauthorized(res);
+
+    Campaign(sequelize)
+        .update(params, {where: {licenseId: license.licenseId, campaignUuid: uuid}})
+        .then(rows => res.status(204).send('Updated'))
+        .catch(err => failError(res, err));
 });
 
 // DELETE uuid delete
 campaignsRouter.delete('/:uuid', async (req: Request, res: Response) => {
-
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
 
     const uuid: string = req.params.uuid;
 
@@ -203,10 +302,41 @@ campaignsRouter.delete('/:uuid', async (req: Request, res: Response) => {
 
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res);
-    } else {
-        Campaign(sequelize).destroy({where: {campaignUuid: uuid}})
-            .then(rows => res.status(200).send('Deleted'))
-            .catch(err => failError(res, err));
+        return failError(res);
     }
+
+    // @ts-ignore
+    let payload: AuthPayload = authorized(req);
+
+    // check by permission
+    if (payload.auth.type === 'User') {
+        let user: UserAttributes | null = await User(sequelize)
+            .findOne({where: {userUuid: payload.auth.uuid}});
+
+        if (!user)
+            return failUnauthorized(res);
+
+        let license: LicenseAttributes | null = await License(sequelize)
+            .findOne({where: {licenseUuid: user.licenseUuid}});
+
+        if (!license)
+            return failError(res, 'Failed to fetch license for user.licenseUuid');
+
+        let campaign: CampaignAttributes | null = await Campaign(sequelize)
+            .findOne({where: {licenseId: license.licenseId, campaignUuid: uuid}});
+
+        if (!campaign)
+            return failUnauthorized(res);
+    } else {
+        let admin: AdminAttributes | null = await Admin(sequelize)
+            .findOne({where: {adminUuid: payload.auth.uuid}});
+
+        if (!admin)
+            return failUnauthorized(res);
+    }
+
+    Campaign(sequelize)
+        .destroy({where: {campaignUuid: uuid}})
+        .then(() => res.status(200).send('Deleted'))
+        .catch(err => failError(res, err));
 });

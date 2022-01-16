@@ -1,7 +1,7 @@
 import {DataTypes, Model, Sequelize} from 'sequelize';
 import Campaign from './campaign';
 
-interface FunnelAttributes {
+export interface FunnelAttributes {
     funnelId: number,
     funnelUuid: string,
     campaignUuid: number,

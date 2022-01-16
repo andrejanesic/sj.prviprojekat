@@ -2,9 +2,9 @@
  * For connecting with the database.
  */
 import {Sequelize} from 'sequelize';
-import {env} from '../helpers';
-import log from '../logger/service';
-import models from './models';
+import {env} from '../helpers/env';
+import log from '../helpers/logger';
+import models from '../models';
 
 /**
  * Database connection. Static variable.

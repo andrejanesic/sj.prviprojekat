@@ -1,36 +1,29 @@
 import {DataTypes, Model, Sequelize} from 'sequelize';
-import License from './license';
 
-interface UserAttributes {
-    userId: number,
-    userUuid: string,
-    licenseUuid: number,
+export interface AdminAttributes {
+    adminId: number,
+    adminUuid: string,
     email: string,
     password: string,
-    isAdminMaster: boolean,
-    isAdminBilling: boolean,
-    firstName: string | null,
-    lastName: string | null,
-    role: string | null,
-    bio: string | null,
+    firstName: string,
+    lastName: string,
+    employeeId: string,
+    permManageAdmins: boolean,
 }
 
 /**
- * User class. Needs to be instantiated via dynamic constructor.
+ * Admin class. Needs to be instantiated via dynamic constructor.
  */
-class User extends Model<UserAttributes> implements UserAttributes {
+class Admin extends Model<AdminAttributes> implements AdminAttributes {
 
-    bio!: string | null;
+    adminId!: number;
+    adminUuid!: string;
     email!: string;
-    firstName!: string | null;
-    isAdminBilling!: boolean;
-    isAdminMaster!: boolean;
-    lastName!: string | null;
-    licenseUuid!: number;
     password!: string;
-    role!: string | null;
-    userId!: number;
-    userUuid!: string;
+    firstName!: string;
+    lastName!: string;
+    employeeId!: string;
+    permManageAdmins!: boolean;
 
     /*static associate({}) {
 
@@ -38,22 +31,23 @@ class User extends Model<UserAttributes> implements UserAttributes {
 }
 
 /**
- * User class dynamic constructor.
+ * Admin class dynamic constructor.
  */
-export default (sequelize: Sequelize): typeof User => {
+export default (sequelize: Sequelize): typeof Admin => {
 
-    User.init({
+    Admin.init({
 
         /* Non-null */
 
-        userId: {
+        adminId: {
             primaryKey: true,
             type: DataTypes.INTEGER,
             autoIncrement: true,
             allowNull: false,
         },
 
-        userUuid: {
+
+        adminUuid: {
             unique: true,
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
@@ -61,15 +55,6 @@ export default (sequelize: Sequelize): typeof User => {
             validate: {
                 notEmpty: true,
                 isUUID: 4,
-            },
-        },
-
-        licenseUuid: {
-            type: DataTypes.UUID,
-            allowNull: false,
-            references: {
-                model: License(sequelize),
-                key: 'licenseUuid'
             },
         },
 
@@ -88,12 +73,7 @@ export default (sequelize: Sequelize): typeof User => {
             allowNull: false,
         },
 
-        isAdminMaster: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-        },
-
-        isAdminBilling: {
+        permManageAdmins: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
         },
@@ -116,21 +96,19 @@ export default (sequelize: Sequelize): typeof User => {
             },
         },
 
-        role: {
-            type: DataTypes.STRING(80),
+        employeeId: {
+            type: DataTypes.STRING(30),
             allowNull: true,
-        },
-
-        bio: {
-            type: DataTypes.TEXT(),
-            allowNull: true,
+            validate: {
+                is: /^$|^[\p{L}'\- ]+$/iu
+            },
         },
 
     }, {
         sequelize: sequelize,
-        modelName: 'User',
+        modelName: 'Admin',
         paranoid: true,
     });
 
-    return User;
+    return Admin;
 };

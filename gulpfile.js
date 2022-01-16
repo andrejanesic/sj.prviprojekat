@@ -2,17 +2,13 @@ const gulp = require('gulp');
 const clean = require('gulp-clean');
 const sass = require('gulp-sass')(require('sass'));
 const exec = require('child_process').exec;
+const concat = require('gulp-concat');
+const uglify = require('gulp-uglify');
 
 const RES = 'res/';
 const PUBLIC = 'public/';
 
 /* Clean */
-
-function cleanEjs() {
-    return gulp
-        .src(PUBLIC + 'views', {read: false, allowEmpty: true})
-        .pipe(clean());
-}
 
 function cleanCss() {
     return gulp
@@ -25,12 +21,6 @@ function cleanAll() {
 }
 
 /* Copy */
-
-function copyEjs() {
-    return gulp
-        .src(RES + 'views/*')
-        .pipe(gulp.dest(PUBLIC + 'views'));
-}
 
 /* Sass */
 
@@ -57,9 +47,26 @@ function tailwind(cb) {
         });
 }
 
-exports.dev = function () {
-    gulp.watch('res/views/**/*.ejs', gulp.series(cleanEjs, copyEjs));
-    gulp.watch('res/sass/**/*.scss', gulp.series(cleanCss, buildSass, tailwind));
+/* JS */
+
+function concatJs(cb) {
+    return gulp
+        .src(RES + 'js/**/*.js')
+        .pipe(concat('index.js'))
+        .pipe(gulp.dest(PUBLIC + 'js'));
 }
-exports.build = gulp.series(cleanAll, copyEjs, tailwind);
+
+function uglifyJs(cb) {
+    return gulp
+        .src(PUBLIC + 'js/**/*.js')
+        .pipe(uglify())
+        .pipe(gulp.dest(PUBLIC + 'js'));
+}
+
+exports.dev = function () {
+    gulp.watch(RES + 'js/**/*.js', gulp.series(concatJs))
+    gulp.watch(RES + 'views/**/*.ejs', gulp.series(cleanCss, buildSass, tailwind));
+    gulp.watch(RES + 'sass/**/*.scss', gulp.series(cleanCss, buildSass, tailwind));
+}
+exports.build = gulp.series(cleanAll, tailwind);
 exports.default = exports.build;

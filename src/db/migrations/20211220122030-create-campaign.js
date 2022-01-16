@@ -56,6 +56,23 @@ module.exports = {
                 allowNull: true,
             },
 
+            /* Auto-generated */
+
+            createdAt: {
+                allowNull: false,
+                type: DataTypes.DATE,
+            },
+
+            updatedAt: {
+                allowNull: false,
+                type: DataTypes.DATE,
+            },
+
+            deletedAt: {
+                allowNull: false,
+                type: DataTypes.DATE,
+            },
+
         });
     },
 

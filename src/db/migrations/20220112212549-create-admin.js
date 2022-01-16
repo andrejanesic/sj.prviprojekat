@@ -2,18 +2,19 @@
 
 module.exports = {
     up: async (queryInterface, DataTypes) => {
-        await queryInterface.createTable('Users', {
+        await queryInterface.createTable('Admins', {
 
             /* Non-null */
 
-            userId: {
+            adminId: {
                 primaryKey: true,
                 type: DataTypes.INTEGER,
                 autoIncrement: true,
                 allowNull: false,
             },
 
-            userUuid: {
+
+            adminUuid: {
                 unique: true,
                 type: DataTypes.UUID,
                 defaultValue: DataTypes.UUIDV4,
@@ -21,15 +22,6 @@ module.exports = {
                 validate: {
                     notEmpty: true,
                     isUUID: 4,
-                },
-            },
-
-            licenseUuid: {
-                type: DataTypes.UUID,
-                allowNull: false,
-                references: {
-                    model: 'Licenses',
-                    key: 'licenseUuid'
                 },
             },
 
@@ -48,12 +40,7 @@ module.exports = {
                 allowNull: false,
             },
 
-            isAdminMaster: {
-                type: DataTypes.BOOLEAN,
-                allowNull: false,
-            },
-
-            isAdminBilling: {
+            permManageAdmins: {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,
             },
@@ -64,7 +51,7 @@ module.exports = {
                 type: DataTypes.STRING(30),
                 allowNull: true,
                 validate: {
-                    is: /^[\p{L}'\- ]+$/iu
+                    is: /^$|^[\p{L}'\- ]+$/iu
                 },
             },
 
@@ -72,18 +59,16 @@ module.exports = {
                 type: DataTypes.STRING(30),
                 allowNull: true,
                 validate: {
-                    is: /^[\p{L}'\- ]+$/iu
+                    is: /^$|^[\p{L}'\- ]+$/iu
                 },
             },
 
-            role: {
-                type: DataTypes.STRING(80),
+            employeeId: {
+                type: DataTypes.STRING(30),
                 allowNull: true,
-            },
-
-            bio: {
-                type: DataTypes.TEXT(),
-                allowNull: true,
+                validate: {
+                    is: /^$|^[\p{L}'\- ]+$/iu
+                },
             },
 
             /* Auto-generated */
@@ -107,6 +92,6 @@ module.exports = {
     },
 
     down: async (queryInterface, DataTypes) => {
-        await queryInterface.dropTable('Users');
+        await queryInterface.dropTable('Admins');
     }
 };

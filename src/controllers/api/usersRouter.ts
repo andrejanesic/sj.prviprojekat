@@ -4,11 +4,17 @@
 import express, {Request, Response} from 'express';
 import * as dotenv from 'dotenv';
 import {connect} from '../../db/service';
-import User from '../../db/models/user';
-import {Sequelize} from 'sequelize';
-import License from '../../db/models/license';
-import {failError, failValidation} from './baseRouter';
+import User, {UserAttributes} from '../../models/user';
+import {FindOptions, Sequelize} from 'sequelize';
+import License, {LicenseAttributes} from '../../models/license';
+import {failError, failForbidden, failUnauthorized, failValidation} from '../../helpers/response';
 import Joi from 'joi';
+import bcrypt from 'bcryptjs';
+import {AuthPayload, AuthPayloadRequest, isUserOrAdmin} from '../../middleware/authentication';
+import jwt from 'jsonwebtoken';
+import {env} from '../../helpers/env';
+import {authorized} from '../../helpers/authorized';
+import {filter} from '../../helpers/filters';
 
 dotenv.config();
 
@@ -21,30 +27,48 @@ export const usersRouter = express.Router();
  * Controller Definitions
  */
 
+const filterParams: string[] = ['userId', 'password', 'createdAt', 'updatedAt', 'deletedAt'];
+
 // GET all
-usersRouter.get('/', async (req: Request, res: Response) => {
+usersRouter.get('/', isUserOrAdmin, async (req: Request, res: Response) => {
 
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
-
+    // connect
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res, 'Sequelize is null!');
-    } else {
-        User(sequelize).findAll()
-            .then(rows => res.json(rows))
-            .catch(err => failError(res, err));
+        return failError(res, 'Sequelize is null!');
     }
+    // set query based on perms
+    let options: FindOptions<UserAttributes> = {};
+
+    // @ts-ignore
+    let payload : AuthPayload = authorized(req);
+    if (payload.auth.type == 'Admin') {
+        options = {};
+    } else {
+        let user: UserAttributes | null = await User(sequelize)
+            .findOne({where: {userUuid: payload.auth.uuid}});
+
+        if (!user)
+            return failUnauthorized(res);
+
+        options = {where: {licenseUuid: user.licenseUuid}};
+    }
+
+    // return
+    User(sequelize).findAll(options)
+        .then(rows => res.json(filter(
+            rows,
+            filterParams
+        )))
+        .catch(err => failError(res, err));
 });
 
 // GET uuid
-usersRouter.get('/:uuid', async (req: Request, res: Response) => {
-
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
+usersRouter.get('/:uuid', isUserOrAdmin, async (req: Request, res: Response) => {
 
     const uuid: string = req.params.uuid;
 
+    // validate
     const schema: Joi.AnySchema = Joi
         .string()
         .guid({version: 'uuidv4'})
@@ -54,35 +78,62 @@ usersRouter.get('/:uuid', async (req: Request, res: Response) => {
         return failValidation(res, error);
     }
 
+    // connect
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res);
-    } else {
-        User(sequelize).findOne({where: {userUuid: uuid}})
-            .then(rows => res.json(rows))
-            .catch(err => failError(res, err));
+        return failError(res);
     }
+    // set query based on perms
+    let options: FindOptions<UserAttributes> = {};
+
+    // @ts-ignore
+    let payload : AuthPayload = authorized(req);
+    if (payload.auth.type == 'User') {
+        options = {where: {userUuid: uuid}};
+    } else {
+        let user: UserAttributes | null = await User(sequelize)
+            .findOne({where: {userUuid: payload.auth.uuid}});
+
+        if (!user)
+            return failUnauthorized(res);
+
+        options = {where: {licenseUuid: user.licenseUuid, userUuid: uuid}};
+    }
+
+    // return
+    User(sequelize).findOne(options)
+        .then(rows => res.json(filter(
+            rows,
+            filterParams
+        )))
+        .catch(err => failError(res, err));
 });
 
 // POST create
 usersRouter.post('/', async (req: Request, res: Response) => {
 
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
+    // check if an admin or a user.
+    // if admin > auth.
+    // if user > check if auth and has perms. Otherwise, create new acc
+    // if not logged in > create new.
 
-    let params: any = {
+    // fetch params
+    // @ts-ignore
+    let params: UserAttributes = {
+        // userId: 0,
+        // userUuid: '',
         bio: req.body.bio,
         email: req.body.email,
         firstName: req.body.firstName,
         isAdminBilling: req.body.isAdminBilling === 'true',
         isAdminMaster: req.body.isAdminMaster === 'true',
         lastName: req.body.lastName,
-        licenseUuid: req.body.licenseUuid,
+        licenseUuid: req.body.licenseUuid ?? '',
         password: req.body.password,
         role: req.body.role,
     };
-    console.log(req.body);
 
+    // validate params
     const schema: Joi.AnySchema = Joi
         .object({
             bio: Joi
@@ -136,48 +187,89 @@ usersRouter.post('/', async (req: Request, res: Response) => {
         return failValidation(res, error);
     }
 
-    // #TODO hash password here!
-
+    // start connection
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res);
-    } else {
-        // if new team (set licenseUuid = null) then make a new license
-        if (params.licenseUuid == null) {
-            // @js-ignore
-            // @ts-ignore
-            License(sequelize).create({
-                // #TODO what string is before '@', is it dangerous?
-                teamName: params.email.toString().split('@')[0] + '\'s Team',
-                type: 'FREE'
-            })
-                .then((value) => {
-                    params.licenseUuid = value.licenseUuid;
-                    params.isAdminMaster = true;
-                    params.isAdminBilling = true;
-
-                    // @js-ignore
-                    User(sequelize).create(params)
-                        .then(rows => res.json(rows))
-                        .catch(err => failError(res, err));
-                })
-                .catch(err => failError(res, err));
-        } else {
-            // #TODO set licenseUuid here since user is being added to existing team!
-
-            // @js-ignore
-            User(sequelize).create(params)
-                .then(rows => res.status(201).json(rows))
-                .catch(err => failError(res, err));
-        }
+        return failError(res);
     }
+
+    // check if email exists
+    if (await User(sequelize).findOne({where: {email: params.email}}))
+        return failValidation(res, 'User already registered.');
+
+    // hash password
+    if (params.password)
+        params.password = bcrypt.hashSync(params.password, 10);
+
+    // if client logged in
+    if (authorized(req)) {
+        let currUuid = authorized(req)?.auth.uuid;
+        let currType = authorized(req)?.auth.type;
+
+        if (currType === 'User') {
+
+            // TODO check if license has enough seats/or start extra billing?
+
+            // existing team, fetch license from db
+            let userExisting: UserAttributes | null = await User(sequelize)
+                .findOne({where: {userUuid: currUuid}});
+
+            // invalid user
+            if (!userExisting) {
+                return failValidation(res);
+            }
+
+            params.licenseUuid = userExisting.licenseUuid;
+        }
+    } else {
+        // if new user, create new license
+
+        // @ts-ignore
+        let license: LicenseAttributes | void = await License(sequelize).create({
+            active: true,
+            reference: null,
+            domain: null,
+
+            // #TODO what string is before '@', is it dangerous?
+            teamName: params.email.toString().split('@')[0] + ' Team',
+            type: 'FREE'
+        });
+
+        params.licenseUuid = license.licenseUuid;
+        params.isAdminMaster = true;
+        params.isAdminBilling = true;
+    }
+
+    // create user
+    User(sequelize).create(params)
+        .then(user => {
+            const payload: AuthPayload = {
+                auth: {
+                    type: 'User',
+                    uuid: user.userUuid
+                }
+            };
+
+            const token: string = jwt.sign(
+                payload,
+                env('JWT_SECRET'),
+                {
+                    expiresIn: '2h'
+                }
+            );
+
+            res.status(201).json(
+                filter(
+                    {...user, token: token},
+                    filterParams
+                )
+            );
+        })
+        .catch(err => failError(res, err));
 });
 
 // PUT uuid update
-usersRouter.put('/:uuid', async (req: Request, res: Response) => {
-
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
+usersRouter.put('/:uuid', isUserOrAdmin, async (req: Request, res: Response) => {
 
     const uuid: string = req.params.uuid;
 
@@ -190,6 +282,8 @@ usersRouter.put('/:uuid', async (req: Request, res: Response) => {
         return failValidation(res, error);
     }
 
+    // @ts-ignore
+    let payload : AuthPayload = authorized(req);
     let params: any = {};
     if (req.body.bio != null) params.bio = req.body.bio;
     if (req.body.email != null) params.email = req.body.email;
@@ -197,7 +291,8 @@ usersRouter.put('/:uuid', async (req: Request, res: Response) => {
     if (req.body.isAdminBilling != null) params.isAdminBilling = req.body.isAdminBilling === 'true';
     if (req.body.isAdminMaster != null) params.isAdminMaster = req.body.isAdminMaster === 'true';
     if (req.body.lastName != null) params.lastName = req.body.lastName;
-    if (req.body.licenseUuid != null) params.licenseUuid = req.body.licenseUuid; // #TODO only allow backoffice to edit this!
+    if (payload.auth.type == 'Admin')
+        if (req.body.licenseUuid != null) params.licenseUuid = req.body.licenseUuid;
     if (req.body.password != null) params.password = req.body.password;
     if (req.body.role != null) params.role = req.body.role;
 
@@ -254,28 +349,37 @@ usersRouter.put('/:uuid', async (req: Request, res: Response) => {
         return failValidation(res, error);
     }
 
-    // #TODO hash password here if changed!
+    // hash password
+    params.password = bcrypt.hashSync(params.password, 10);
 
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res);
-    } else {
-        // #TODO prevent end users from transferring themselves into different teams!
-
-        User(sequelize).update(params, {where: {userUuid: uuid}})
-            .then(rows => res.status(204).send('Updated'))
-            .catch(err => failError(res, err));
+        return failError(res);
     }
+
+    // check perms
+    if (payload.auth.type == 'Admin') {
+        User(sequelize).update(params, {where: {userUuid: uuid}})
+            .then(() => res.status(204).send('Updated'))
+            .catch(err => failError(res, err));
+        return;
+    }
+
+    if (payload.auth.uuid != uuid) {
+        return failUnauthorized(res);
+    }
+
+    User(sequelize).update(params, {where: {userUuid: uuid}})
+        .then(() => res.status(204).send('Updated'))
+        .catch(err => failError(res, err));
 });
 
 // DELETE uuid delete
-usersRouter.delete('/:uuid', async (req: Request, res: Response) => {
-
-    // #TODO add auth, this function is only limited to ADMINS
-    // #TODO check if user has perms to do all this!
+usersRouter.delete('/:uuid', isUserOrAdmin, async (req: Request, res: Response) => {
 
     const uuid: string = req.params.uuid;
 
+    // validate
     const schema: Joi.AnySchema = Joi
         .string()
         .guid({version: 'uuidv4'})
@@ -285,12 +389,37 @@ usersRouter.delete('/:uuid', async (req: Request, res: Response) => {
         return failValidation(res, error);
     }
 
+    // connect
     const sequelize: Sequelize | null = await connect();
     if (sequelize == null) {
-        failError(res);
-    } else {
-        User(sequelize).destroy({where: {userUuid: uuid}})
-            .then(rows => res.status(200).send('Deleted'))
-            .catch(err => failError(res, err));
+        return failError(res);
     }
+
+    // @ts-ignore
+    let payload : AuthPayload = authorized(req);
+
+    // check perms
+    if (payload.auth.type == 'Admin') {
+        User(sequelize).destroy({where: {userUuid: uuid}})
+            .then(() => res.status(200).send('Deleted'))
+            .catch(err => failError(res, err));
+        return;
+    }
+
+    let client: UserAttributes | any = await User(sequelize)
+        .findOne({where: {userUuid: payload.auth.uuid}});
+
+    if (!client.isAdminMaster)
+        return failForbidden(res);
+
+    let target: UserAttributes | any = await User(sequelize)
+        .findOne({where: {userUuid: uuid}});
+
+    if (client.licenseUuid != target.licenseUuid)
+        return failForbidden(res);
+
+    User(sequelize)
+        .destroy({where: {licenseUuid: client.licenseUuid, userUuid: target.userUuid}})
+        .then(() => res.status(200).send('Deleted'))
+        .catch(err => failError(res, err));
 });

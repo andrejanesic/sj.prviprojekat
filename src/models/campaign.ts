@@ -1,7 +1,7 @@
 import {DataTypes, Model, Sequelize} from 'sequelize';
 import License from './license';
 
-interface CampaignAttributes {
+export interface CampaignAttributes {
     campaignId: number,
     campaignUuid: string,
     licenseId: number,

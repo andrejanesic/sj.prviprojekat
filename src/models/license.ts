@@ -5,7 +5,8 @@ export type LicenseType = 'FREE';
 /**
  * License attributes.
  */
-interface LicenseAttributes {
+export interface LicenseAttributes {
+
     // internal license ID
     licenseId: number,
 

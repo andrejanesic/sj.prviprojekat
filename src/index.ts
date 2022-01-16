@@ -10,6 +10,9 @@ import {licensesRouter} from './controllers/api/licensesRouter';
 import {campaignsRouter} from './controllers/api/campaignsRouter';
 import {funnelsRouter} from './controllers/api/funnelsRouter';
 import {adminRouter} from './controllers/admin/adminRouter';
+import {adminsRouter} from './controllers/api/adminsRouter';
+import {loginRouter} from './controllers/api/loginRouter';
+import {resetsRouter} from './controllers/api/resetsRouter';
 
 dotenv.config();
 
@@ -54,6 +57,9 @@ app.use('/api/users', usersRouter);
 app.use('/api/licenses', licensesRouter);
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/funnels', funnelsRouter);
+app.use('/api/admins', adminsRouter);
+app.use('/api/login', loginRouter);
+app.use('/api/reset', resetsRouter);
 app.use('/admin', adminRouter);
 
 /**

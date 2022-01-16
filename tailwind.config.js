@@ -1,3 +1,6 @@
 module.exports = {
-  content: ['./res/views/**/*.ejs'],
+  content: [
+      './res/views/**/*.ejs',
+      './res/js/**/*.js'
+  ],
 }

@@ -4,10 +4,11 @@
 import express, {Request, Response} from 'express';
 import * as dotenv from 'dotenv';
 import {connect} from '../../db/service';
-import License from '../../db/models/license';
+import License, {LicenseAttributes} from '../../models/license';
 import {Sequelize} from 'sequelize';
-import {failError, failValidation} from './baseRouter';
+import {failError, failValidation} from '../../helpers/response';
 import Joi from 'joi';
+import {isAdmin, isUserOrAdmin} from '../../middleware/authentication';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ dotenv.config();
  * Router Definition
  */
 export const licensesRouter = express.Router();
+licensesRouter.use(isAdmin);
 
 /**
  * Controller Definitions
@@ -23,7 +25,6 @@ export const licensesRouter = express.Router();
 // GET all
 licensesRouter.get('/', async (req: Request, res: Response) => {
 
-    // #TODO add auth, this function is only limited to ADMINS
     // #TODO check if user has perms to do all this!
 
     const sequelize: Sequelize | null = await connect();
@@ -39,7 +40,6 @@ licensesRouter.get('/', async (req: Request, res: Response) => {
 // GET uuid
 licensesRouter.get('/:uuid', async (req: Request, res: Response) => {
 
-    // #TODO add auth, this function is only limited to ADMINS
     // #TODO check if user has perms to do all this!
 
     const uuid: string = req.params.uuid;
@@ -66,22 +66,23 @@ licensesRouter.get('/:uuid', async (req: Request, res: Response) => {
 // POST create
 licensesRouter.post('/', async (req: Request, res: Response) => {
 
-    // #TODO add auth, this function is only limited to ADMINS
     // #TODO check if user has perms to do all this!
 
-    let params: object = {
+    let params: LicenseAttributes = {
+        licenseId: 0,
+        licenseUuid: '',
         type: req.body.type != null ? req.body.type : 'FREE', // #TODO the 'FREE' part could cause trouble!
-        reference: req.body.type,
+        reference: req.body.reference,
         domain: req.body.domain,
         teamName: req.body.teamName,
-        active: req.body.active === 'true',
+        active: req.body.active === 'true'
     };
 
     const schema: Joi.AnySchema = Joi
         .object({
             type: Joi
                 .string()
-                .allow('FREE') // #TODO use enum instead of literals for all license type-related!
+                .regex(/^FREE$/) // #TODO use enum instead of literals for all license type-related!
                 .required(),
 
             reference: Joi
@@ -113,8 +114,6 @@ licensesRouter.post('/', async (req: Request, res: Response) => {
     if (sequelize == null) {
         failError(res);
     } else {
-        // @js-ignore
-        // @ts-ignore
         License(sequelize).create(params)
             .then(rows => res.status(201).json(rows))
             .catch(err => failError(res, err));
@@ -125,7 +124,6 @@ licensesRouter.post('/', async (req: Request, res: Response) => {
 licensesRouter.put('/:uuid', async (req: Request, res: Response) => {
 
     // #TODO check if license has perms to do all this!
-    // #TODO add auth, this function is only limited to ADMINS
 
     const uuid: string = req.params.uuid;
 
@@ -151,7 +149,7 @@ licensesRouter.put('/:uuid', async (req: Request, res: Response) => {
         .object({
             type: Joi
                 .string()
-                .allow('FREE') // #TODO use enum instead of literals for all license type-related!
+                .regex(/^FREE$/) // #TODO use enum instead of literals for all license type-related!
                 .optional(),
 
             reference: Joi
@@ -174,7 +172,7 @@ licensesRouter.put('/:uuid', async (req: Request, res: Response) => {
                 .boolean()
                 .optional(),
         });
-    error = schema1.validate(params, {abortEarly: false});
+    error = schema1.validate(params, {abortEarly: false}).error;
     if (error != null) {
         return failValidation(res, error);
     }
@@ -193,7 +191,6 @@ licensesRouter.put('/:uuid', async (req: Request, res: Response) => {
 licensesRouter.delete('/:uuid', async (req: Request, res: Response) => {
 
     // #TODO check if license has perms to do all this!
-    // #TODO add auth, this function is only limited to ADMINS
 
     const uuid: string = req.params.uuid;
 

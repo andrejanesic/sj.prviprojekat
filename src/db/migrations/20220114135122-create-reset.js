@@ -2,18 +2,18 @@
 
 module.exports = {
     up: async (queryInterface, DataTypes) => {
-        await queryInterface.createTable('Funnels', {
+        await queryInterface.createTable('Resets', {
 
             /* Non-null */
 
-            funnelId: {
+            resetId: {
                 primaryKey: true,
                 type: DataTypes.INTEGER,
                 autoIncrement: true,
                 allowNull: false,
             },
 
-            funnelUuid: {
+            resetUuid: {
                 unique: true,
                 type: DataTypes.UUID,
                 defaultValue: DataTypes.UUIDV4,
@@ -24,36 +24,28 @@ module.exports = {
                 },
             },
 
-            campaignUuid: {
-                type: DataTypes.UUID,
-                allowNull: false,
-                references: {
-                    model: 'Campaigns',
-                    key: 'campaignUuid'
-                },
-            },
-
-            name: {
-                unique: true,
+            token: {
                 type: DataTypes.STRING(60),
                 allowNull: false,
             },
 
-            isTemplate: {
-                type: DataTypes.BOOLEAN,
+            refUuid: {
+                type: DataTypes.UUID,
+                allowNull: false,
+                validate: {
+                    notEmpty: true,
+                    isUUID: 4,
+                },
+            },
+
+            refType: {
+                type: DataTypes.ENUM('User', 'Admin'),
                 allowNull: false,
             },
 
-            /* Nullable */
-
-            type: {
-                type: DataTypes.STRING(30),
-                allowNull: true,
-            },
-
-            description: {
-                type: DataTypes.TEXT(),
-                allowNull: true,
+            validBy: {
+                type: DataTypes.DATE,
+                allowNull: false,
             },
 
             /* Auto-generated */
@@ -77,6 +69,6 @@ module.exports = {
     },
 
     down: async (queryInterface, DataTypes) => {
-        await queryInterface.dropTable('Funnels');
+        await queryInterface.dropTable('Resets');
     }
 };

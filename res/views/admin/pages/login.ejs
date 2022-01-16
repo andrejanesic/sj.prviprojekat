@@ -4,7 +4,8 @@
     <%- include('../partials/head'); %>
     <title>Admin | Login</title>
 </head>
-<body class="bg-slate-200">
+<body id="login" class="bg-slate-200">
+<%- include('../partials/body'); %>
 <div class="container mx-auto">
     <div class="flex flex-wrap justify-center pt-20">
         <div class="w-full md:w-1/2 bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col">
@@ -13,7 +14,7 @@
                 <label class="block text-grey-darker text-sm font-bold mb-2" for="email">
                     Email
                 </label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" id="email"
+                <input class="_email shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" id="email"
                        type="text"
                        placeholder="Email">
             </div>
@@ -21,13 +22,16 @@
                 <label class="block text-grey-darker text-sm font-bold mb-2" for="password">
                     Password
                 </label>
-                <input class="shadow appearance-none border border-red rounded w-full py-2 px-3 text-grey-darker mb-3"
+                <input class="_password shadow appearance-none border border-red rounded w-full py-2 px-3 text-grey-darker mb-3"
                        id="password" type="password" placeholder="************">
             </div>
             <div class="flex justify-center">
-                <button class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded" type="button">
+                <button class="_login bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded" type="button">
                     Sign In
                 </button>
+            </div>
+            <div class="mt-8 text-center">
+                <a class="text-indigo-500 hover:text-indigo-600" href="/admin/reset">Reset Password</a>
             </div>
         </div>
     </div>
